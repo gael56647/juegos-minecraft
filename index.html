@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salta el Creeper</title>
+    <style>
+        body {
+            background-color: lightblue;
+            text-align: center;
+            margin: 0;
+            overflow: hidden;
+        }
+        h1 {
+            font-family: Arial, sans-serif;
+            color: white;
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1;
+        }
+        /* Estilos para el video de fondo */
+        #bgVideo {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+        }
+        canvas {
+            border: 2px solid black;
+            background-color: transparent;
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <h1>Salta el Creeper</h1>
+
+    <!-- Video de fondo -->
+    <video id="bgVideo" autoplay loop muted>
+        <source src="fondo.mp4" type="video/mp4">
+        Tu navegador no soporta videos.
+    </video>
+
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let steve, creeper, gravity, jumpPower, gameOver, score;
+        let steveImg = new Image();
+        let creeperImg = new Image();
+
+        steveImg.src = "steve.png";   // Imagen de Steve
+        creeperImg.src = "creeper.png"; // Imagen del Creeper
+
+        function init() {
+            steve = { x: 50, y: 300, width: 50, height: 50, vy: 0, jumping: false };
+            creeper = { x: 800, y: 320, width: 35, height: 35, speed: 5 };
+            gravity = 1.5;
+            jumpPower = -20;
+            gameOver = false;
+            score = 0;
+        }
+
+        function update() {
+            if (gameOver) return;
+
+            // Movimiento del Creeper
+            creeper.x -= creeper.speed;
+            if (creeper.x < -35) {
+                creeper.x = 800;
+                score++;
+                if (score % 5 === 0) {
+                    creeper.speed += 1;
+                }
+            }
+
+            // Movimiento de Steve
+            steve.y += steve.vy;
+            steve.vy += gravity;
+
+            if (steve.y >= 300) {
+                steve.y = 300;
+                steve.vy = 0;
+                steve.jumping = false;
+            }
+
+            // Verificar colisión
+            if (
+                steve.x < creeper.x + creeper.width &&
+                steve.x + steve.width > creeper.x &&
+                steve.y < creeper.y + creeper.height &&
+                steve.y + steve.height > creeper.y
+            ) {
+                gameOver = true;
+                alert(`¡Perdiste! Puntuación final: ${score}\nPresiona ESPACIO para jugar de nuevo.`);
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Dibujar Steve
+            ctx.drawImage(steveImg, steve.x, steve.y, steve.width, steve.height);
+
+            // Dibujar Creeper
+            ctx.drawImage(creeperImg, creeper.x, creeper.y, creeper.width, creeper.height);
+
+            // Dibujar puntuación
+            ctx.fillStyle = "white";
+            ctx.font = "20px Arial";
+            ctx.fillText(`Puntuación: ${score}`, 20, 30);
+        }
+
+        function jump() {
+            if (!steve.jumping) {
+                steve.vy = jumpPower;
+                steve.jumping = true;
+            }
+        }
+
+        function resetGame() {
+            init();
+            gameLoop();
+        }
+
+        document.addEventListener("keydown", function (event) {
+            if (event.code === "Space") {
+                if (gameOver) {
+                    resetGame();
+                } else {
+                    jump();
+                }
+            }
+        });
+
+        function gameLoop() {
+            update();
+            draw();
+            if (!gameOver) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        init();
+        gameLoop();
+    </script>
+</body>
+</html>
